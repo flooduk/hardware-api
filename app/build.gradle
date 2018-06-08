@@ -17,10 +17,9 @@ android {
     }
 }
 
-dependencies {
+allprojects {
+    repositories {
+        jcenter()
+        google()
+    }
 }
-
-apply plugin: 'android-nexus-publish'
-publishPluginExt.groupId 'ru.evotor.devices'
-publishPluginExt.artifactId "hardware-api"
-
