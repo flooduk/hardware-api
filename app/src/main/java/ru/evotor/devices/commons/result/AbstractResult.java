@@ -5,12 +5,14 @@ import android.os.Parcel;
 import ru.evotor.devices.commons.exception.DeviceNotFoundException;
 import ru.evotor.devices.commons.exception.DeviceServiceException;
 import ru.evotor.devices.commons.exception.DriverException;
+import ru.evotor.devices.commons.exception.KkmDeviceException;
 import ru.evotor.devices.commons.exception.NoPermanentInfoException;
 import ru.evotor.devices.commons.exception.ServiceNotConnectedException;
 import ru.evotor.devices.commons.exception.UnknownException;
 import ru.evotor.devices.commons.exception.UsbHubProblemException;
 import ru.evotor.devices.commons.exception.error_extension.AbstractErrorExtension;
 import ru.evotor.devices.commons.exception.error_extension.DriverExceptionErrorExtension;
+import ru.evotor.devices.commons.exception.error_extension.KkmDeviceErrorExtension;
 import ru.evotor.devices.commons.exception.error_extension.UsbHubStateErrorExtension;
 
 public abstract class AbstractResult {
@@ -21,6 +23,7 @@ public abstract class AbstractResult {
     private static final int USB_HUB_PROBLEM = -4;
     private static final int DRIVER_EXCEPTION = -5;
     private static final int NO_PERMANENT_INFO = -6;
+    private static final int KKM_DEVICE_EXCEPTION = -7;
 
     public static AbstractErrorExtension createErrorExtension(int errorCode, Parcel parcel) {
         switch (errorCode) {
@@ -28,6 +31,8 @@ public abstract class AbstractResult {
                 return new UsbHubStateErrorExtension(parcel);
             case DRIVER_EXCEPTION:
                 return new DriverExceptionErrorExtension(parcel);
+            case KKM_DEVICE_EXCEPTION:
+                return new KkmDeviceErrorExtension(parcel);
             default:
                 return null;
         }
@@ -47,6 +52,8 @@ public abstract class AbstractResult {
             return new ErrorDescription(DRIVER_EXCEPTION, exc.getMessage(), new DriverExceptionErrorExtension(((DriverException) exc).getDriverMessage()));
         } else if (exc instanceof NoPermanentInfoException) {
             return new ErrorDescription(NO_PERMANENT_INFO, exc.getMessage());
+        } else if (exc instanceof KkmDeviceException) {
+            return new ErrorDescription(KKM_DEVICE_EXCEPTION, exc.getMessage());
         } else {
             return new ErrorDescription(UNKNOWN, exc.getMessage());
         }
@@ -90,6 +97,15 @@ public abstract class AbstractResult {
 
             case NO_PERMANENT_INFO:
                 throw new NoPermanentInfoException();
+
+            case KKM_DEVICE_EXCEPTION:
+                AbstractErrorExtension kkmDeviceErrorExtension = errorDescription.getErrorExtension();
+                if (kkmDeviceErrorExtension instanceof KkmDeviceErrorExtension) {
+                    KkmDeviceErrorExtension e = (KkmDeviceErrorExtension) kkmDeviceErrorExtension;
+                    throw new KkmDeviceException(e.getErrorCode(), e.getErrorMessage());
+                } else {
+                    throw new UnknownException(errorUserDescription);
+                }
 
             default:
                 throw new UnknownException(errorUserDescription);
